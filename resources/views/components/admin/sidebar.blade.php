@@ -10,7 +10,7 @@
         @endcan
         @can('Barang Index')
             <li class="nav-item">
-                <a class="nav-link py-2" href="{{ route('admin.dashboard') }}">
+                <a class="nav-link py-2" href="{{ route('admin.barang.index') }}">
                     <i class="mdi mdi-package pr-2 icon-large"></i>
                     <span class="menu-title">Barang</span>
                 </a>
@@ -27,7 +27,7 @@
                 <ul class="nav flex-column sub-menu">
                     @can('Barang Masuk Index')
                         <li class="nav-item">
-                            <a class="nav-link" href=""> Barang Masuk</a>
+                            <a class="nav-link" href=" {{ route('admin.barang-masuk.index') }}"> Barang Masuk</a>
                         </li>
                     @endcan
                     @can('Barang Keluar Index')

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\BarangController;
+use App\Http\Controllers\Admin\BarangMasukController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\JenisController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -45,4 +47,10 @@ Route::middleware('auth')->name('admin.')->prefix('admin')->group(function () {
 
     // supplier
     Route::resource('supplier', SupplierController::class)->except('show');
+
+    // barang
+    Route::resource('barang', BarangController::class)->except('show');
+
+    // barang-masuk
+    Route::resource('barang-masuk', BarangMasukController::class)->except('show');
 });
