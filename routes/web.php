@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BarangController;
+use App\Http\Controllers\Admin\BarangKeluarController;
 use App\Http\Controllers\Admin\BarangMasukController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\JenisController;
@@ -54,4 +55,6 @@ Route::middleware('auth')->name('admin.')->prefix('admin')->group(function () {
 
     // barang-masuk
     Route::resource('barang-masuk', BarangMasukController::class)->except('show');
+    // barang-keluar
+    Route::resource('barang-keluar', BarangKeluarController::class)->except('show');
 });

@@ -32,7 +32,7 @@
                     @endcan
                     @can('Barang Keluar Index')
                         <li class="nav-item">
-                            <a class="nav-link" href=""> Barang Keluar</a>
+                            <a class="nav-link" href="{{ route('admin.barang-keluar.index') }}"> Barang Keluar</a>
                         </li>
                     @endcan
                 </ul>

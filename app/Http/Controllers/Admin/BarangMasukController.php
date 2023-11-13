@@ -100,7 +100,7 @@ class BarangMasukController extends Controller
         DB::beginTransaction();
         try {
             $item = BarangMasuk::findOrFail($id);
-            $data = request()->only(['jumlah', 'harga']);
+            $data = request()->only(['jumlah', 'harga', 'keterangan']);
             if ($item->jumlah != request('jumlah') || $item->harga != $item->harga) {
                 // jika jumlah atau harga berubah
                 $data['total'] = request('jumlah') * request('harga');
