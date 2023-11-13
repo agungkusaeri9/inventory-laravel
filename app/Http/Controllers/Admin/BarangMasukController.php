@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Barang;
 use App\Models\BarangMasuk;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BarangMasukController extends Controller
 {
@@ -18,30 +21,56 @@ class BarangMasukController extends Controller
 
     public function index()
     {
-        $items = BarangMasuk::latest()->get();
+        $barang_id = request('barang_id');
+        $supplier_id = request('supplier_id');
+        $tanggal = request('tanggal');
+        $items = BarangMasuk::latest();
+        // filterisasi
+        if ($barang_id)
+            $items->where('barang_id', $barang_id);
+        if ($supplier_id)
+            $items->where('supplier_id', $supplier_id);
+        if ($tanggal)
+            $items->whereDate('created_at', $tanggal);
+
+        $data = $items->get();
+        $data_supplier = Supplier::orderBy('nama', 'ASC')->get();
+        $data_barang = Barang::orderBy('nama', 'ASC')->get();
         return view('admin.pages.barang-masuk.index', [
             'title' => 'Barang Masuk',
-            'items' => $items
+            'items' => $data,
+            'data_supplier' => $data_supplier,
+            'data_barang' => $data_barang
         ]);
     }
 
     public function create()
     {
+        $data_supplier = Supplier::orderBy('nama', 'ASC')->get();
+        $data_barang = Barang::orderBy('nama', 'ASC')->get();
         return view('admin.pages.barang-masuk.create', [
-            'title' => 'Tambah Barang Masuk'
+            'title' => 'Tambah Barang Masuk',
+            'data_supplier' => $data_supplier,
+            'data_barang' => $data_barang
         ]);
     }
 
     public function store()
     {
         request()->validate([
-            'nama' => ['required', 'unique:Barang Masuk,nama'],
+            'barang_id' => ['required', 'numeric'],
+            'supplier_id' => ['required', 'numeric'],
+            'jumlah' => ['required', 'min:1', 'numeric'],
+            'harga' => ['required', 'numeric', 'min:1'],
+            'total' => ['required']
         ]);
 
         DB::beginTransaction();
         try {
-            $data = request()->only(['nama']);
-            BarangMasuk::create($data);
+            $data = request()->only(['barang_id', 'supplier_id', 'jumlah', 'harga', 'keterangan']);
+            $data['total'] = request('jumlah') * request('harga');
+            $barang_masuk = BarangMasuk::create($data);
+            $barang_masuk->barang->increment('stok', request('jumlah'));
 
             DB::commit();
             return redirect()->route('admin.barang-masuk.index')->with('success', 'Barang Masuk berhasil ditambahkan.');
@@ -54,7 +83,7 @@ class BarangMasukController extends Controller
 
     public function edit($id)
     {
-        $item = BarangMasuk::FindOrFail($id);
+        $item = BarangMasuk::with(['barang.satuan', 'barang.jenis', 'supplier'])->FindOrFail($id);
         return view('admin.pages.barang-masuk.edit', [
             'title' => 'Edit Barang Masuk',
             'item' => $item
@@ -64,13 +93,24 @@ class BarangMasukController extends Controller
     public function update($id)
     {
         request()->validate([
-            'nama' => ['required', 'unique:Barang Masuk,nama,' . $id . ''],
+            'jumlah' => ['required', 'min:1', 'numeric'],
+            'harga' => ['required', 'numeric', 'min:1'],
         ]);
 
         DB::beginTransaction();
         try {
             $item = BarangMasuk::findOrFail($id);
-            $data = request()->only(['nama']);
+            $data = request()->only(['jumlah', 'harga']);
+            if ($item->jumlah != request('jumlah') || $item->harga != $item->harga) {
+                // jika jumlah atau harga berubah
+                $data['total'] = request('jumlah') * request('harga');
+
+                // udpate juga stok yang ada d barang
+                // kurangi terlebih dahulu dengan stok sebelumnya
+                $item->barang->decrement('stok', $item->jumlah);
+                // tambahkan stok dengan jumlah terbaru
+                $item->barang->increment('stok', request('jumlah'));
+            }
             $item->update($data);
 
             DB::commit();
@@ -87,8 +127,10 @@ class BarangMasukController extends Controller
 
         DB::beginTransaction();
         try {
-            $item = BarangMasuk::FindOrFail($id);
+            $item = BarangMasuk::with('barang')->FindOrFail($id);
             $item->delete();
+            // kurangi stok barang
+            $item->barang->decrement('stok', $item->jumlah);
             DB::commit();
             return redirect()->route('admin.barang-masuk.index')->with('success', 'Barang Masuk berhasil dihapus.');
         } catch (\Throwable $th) {

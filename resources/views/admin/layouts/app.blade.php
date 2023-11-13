@@ -21,12 +21,34 @@
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendors/mdi/css/materialdesignicons.min.css') }}">
+    <script src="{{ asset('assets/js/jquery-3.7.0.min.js') }}"></script>
     @stack('styles')
     @vite(['resources/js'])
     <style>
         .icon-large {
             font-size: 1.5em;
             /* Sesuaikan dengan ukuran yang Anda inginkan */
+        }
+
+        /* Menyesuaikan tinggi Select2 dengan elemen input Bootstrap */
+        .select2-container .select2-selection {
+            height: calc(2.25rem + 10px) !important;
+        }
+
+        /* Menyesuaikan tinggi dropdown Select2 agar sesuai dengan elemen input */
+        .select2-container .select2-dropdown {
+            margin-top: -1px !important;
+        }
+
+        /* Jika menggunakan tema Bootstrap 4 */
+        .select2-container--bootstrap4 .select2-selection {
+            height: auto !important;
+            padding: .375rem .75rem !important;
+        }
+
+        /* Untuk menyesuaikan padding pada tombol di dropdown Select2 jika menggunakan tema Bootstrap 4 */
+        .select2-container--bootstrap4 .select2-dropdown .select2-results__option {
+            padding: .375rem .75rem !important;
         }
     </style>
 </head>
@@ -241,7 +263,6 @@
     </div>
     <!-- container-scroller -->
 
-    <script src="{{ asset('assets/js/jquery-3.7.0.min.js') }}"></script>
     <!-- plugins:js -->
     <script src="{{ asset('assets/vendors/js/vendor.bundle.base.js') }}"></script>
     <!-- endinject -->

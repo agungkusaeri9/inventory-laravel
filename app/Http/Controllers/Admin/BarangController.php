@@ -130,4 +130,22 @@ class BarangController extends Controller
             return redirect()->back()->with('error', $th->getMessage());
         }
     }
+
+    public function getByIdJson()
+    {
+        if (request()->ajax()) {
+            $item = Barang::with(['jenis', 'satuan'])->find(request('barang_id'));
+            if ($item) {
+                return response()->json([
+                    'status' => true,
+                    'data' => $item
+                ], 200);
+            } else {
+                return  response()->json([
+                    'status' => false,
+                    'data' => NULL
+                ], 403);
+            }
+        }
+    }
 }

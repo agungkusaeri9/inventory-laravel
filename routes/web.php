@@ -50,6 +50,7 @@ Route::middleware('auth')->name('admin.')->prefix('admin')->group(function () {
 
     // barang
     Route::resource('barang', BarangController::class)->except('show');
+    Route::get('barang/get-by-id-json', [BarangController::class, 'getByIdJson'])->name('barang.getByIdJson');
 
     // barang-masuk
     Route::resource('barang-masuk', BarangMasukController::class)->except('show');
