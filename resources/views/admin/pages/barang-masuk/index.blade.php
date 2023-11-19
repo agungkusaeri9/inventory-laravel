@@ -8,22 +8,6 @@
                     <form action="{{ route('admin.barang-masuk.index') }}" method="get">
                         <div class='form-group mb-3 row'>
                             <div class="col-md-3">
-                                <label for='barang_id' class='mb-2'>Barang</label>
-                                <select name="barang_id" id="barang_id"
-                                    class="form-control select2 @error('barang_id') is-invalid @enderror">
-                                    <option value="" selected>Pilih Barang</option>
-                                    @foreach ($data_barang as $barang)
-                                        <option @selected($barang->id == request('barang_id')) value="{{ $barang->id }}">{{ $barang->nama }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('barang_id')
-                                    <div class='invalid-feedback'>
-                                        {{ $message }}
-                                    </div>
-                                @enderror
-                            </div>
-                            <div class="col-md-3">
                                 <label for='supplier_id' class='mb-2'>Supplier</label>
                                 <select name="supplier_id" id="supplier_id"
                                     class="form-control select2 @error('supplier_id') is-invalid @enderror">
@@ -79,12 +63,9 @@
                                 <tr>
                                     <th>No.</th>
                                     <th>Tanggal</th>
+                                    <th>Kode</th>
                                     <th>Supplier</th>
-                                    <th>Nama Barang</th>
-                                    <th>Jumlah</th>
-                                    <th>Harga</th>
-                                    <th>Total</th>
-                                    @canany(['Barang Masuk Edit', 'Barang Masuk Delete'])
+                                    @canany(['Barang Masuk Detail', 'Barang Masuk Delete'])
                                         <th>Aksi</th>
                                     @endcanany
                                 </tr>
@@ -93,17 +74,14 @@
                                 @foreach ($items as $item)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $item->created_at->translatedFormat('d-m-Y H:i:s') }}</td>
+                                        <td>{{ $item->tanggal->translatedFormat('d-m-Y') }}</td>
+                                        <td>{{ $item->kode }}</td>
                                         <td>{{ $item->supplier->nama }}</td>
-                                        <td>{{ $item->barang->nama }}</td>
-                                        <td>{{ $item->jumlah }}</td>
-                                        <td>{{ $item->harga() }}</td>
-                                        <td>{{ $item->total() }}</td>
-                                        @canany(['Barang Masuk Edit', 'Barang Masuk Delete'])
+                                        @canany(['Barang Masuk Detail', 'Barang Masuk Delete'])
                                             <td>
-                                                @can('Barang Masuk Edit')
-                                                    <a href="{{ route('admin.barang-masuk.edit', $item->id) }}"
-                                                        class="btn btn-sm py-2 btn-info">Edit</a>
+                                                @can('Barang Masuk Detail')
+                                                    <a href="{{ route('admin.barang-masuk.show', $item->uuid) }}"
+                                                        class="btn btn-sm py-2 btn-warning">Detail</a>
                                                 @endcan
                                                 @can('Barang Masuk Delete')
                                                     <form action="javascript:void(0)" method="post" class="d-inline"
@@ -111,7 +89,7 @@
                                                         @csrf
                                                         @method('delete')
                                                         <button class="btn btnDelete btn-sm py-2 btn-danger"
-                                                            data-action="{{ route('admin.barang-masuk.destroy', $item->id) }}">Hapus</button>
+                                                            data-action="{{ route('admin.barang-masuk.destroy', $item->uuid) }}">Hapus</button>
                                                     </form>
                                                 @endcan
                                             </td>

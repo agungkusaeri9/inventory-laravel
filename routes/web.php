@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BarangController;
 use App\Http\Controllers\Admin\BarangKeluarController;
 use App\Http\Controllers\Admin\BarangMasukController;
+use App\Http\Controllers\Admin\BarangMasukDetailController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\JenisController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SatuanController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
+use App\Models\BarangMasukDetail;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,7 +56,10 @@ Route::middleware('auth')->name('admin.')->prefix('admin')->group(function () {
     Route::get('barang/get-by-id-json', [BarangController::class, 'getByIdJson'])->name('barang.getByIdJson');
 
     // barang-masuk
-    Route::resource('barang-masuk', BarangMasukController::class)->except('show');
+    Route::resource('barang-masuk', BarangMasukController::class);
+
+    // barang-masuk-detail
+    Route::resource('barang-masuk-detail', BarangMasukDetailController::class);
     // barang-keluar
-    Route::resource('barang-keluar', BarangKeluarController::class)->except('show');
+    Route::resource('barang-keluar', BarangKeluarController::class);
 });

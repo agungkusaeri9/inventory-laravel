@@ -8,6 +8,8 @@ use App\Models\BarangMasuk;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator as FacadesValidator;
+use Illuminate\Validation\Validator;
 
 class BarangMasukController extends Controller
 {
@@ -21,13 +23,10 @@ class BarangMasukController extends Controller
 
     public function index()
     {
-        $barang_id = request('barang_id');
         $supplier_id = request('supplier_id');
         $tanggal = request('tanggal');
         $items = BarangMasuk::latest();
         // filterisasi
-        if ($barang_id)
-            $items->where('barang_id', $barang_id);
         if ($supplier_id)
             $items->where('supplier_id', $supplier_id);
         if ($tanggal)
@@ -48,36 +47,60 @@ class BarangMasukController extends Controller
     {
         $data_supplier = Supplier::orderBy('nama', 'ASC')->get();
         $data_barang = Barang::orderBy('nama', 'ASC')->get();
+        $data_supplier = Supplier::orderBy('nama', 'ASC')->get();
         return view('admin.pages.barang-masuk.create', [
             'title' => 'Tambah Barang Masuk',
             'data_supplier' => $data_supplier,
-            'data_barang' => $data_barang
+            'data_barang' => $data_barang,
+            'data_supplier' => $data_supplier
         ]);
     }
 
     public function store()
     {
-        request()->validate([
-            'barang_id' => ['required', 'numeric'],
-            'supplier_id' => ['required', 'numeric'],
-            'jumlah' => ['required', 'min:1', 'numeric'],
-            'harga' => ['required', 'numeric', 'min:1'],
-            'total' => ['required']
-        ]);
+        if (request()->ajax()) {
+            $validator = FacadesValidator::make(request()->all(), [
+                'supplier_id' => ['required', 'numeric'],
+                'tanggal' => ['required'],
+                'json' => ['required', 'array']
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+            DB::beginTransaction();
+            try {
+                $data = request()->only(['supplier_id', 'keterangan', 'tanggal']);
+                $data['uuid'] = \Str::uuid();
+                $data_json = request('json');
+                $data['kode'] = BarangMasuk::getNewCode();
+                $barang_masuk = BarangMasuk::create($data);
+                foreach ($data_json as $json) {
+                    $detail = $barang_masuk->details()->create([
+                        'uuid' => \Str::uuid(),
+                        'barang_id' => $json[0]['barang_id'],
+                        'jumlah' => $json[0]['jumlah'],
+                        'harga' => $json[0]['harga'],
+                        'total' => $json[0]['jumlah'] * $json[0]['harga']
+                    ]);
+                    $detail->barang->increment('stok', $json[0]['jumlah']);
+                }
 
-        DB::beginTransaction();
-        try {
-            $data = request()->only(['barang_id', 'supplier_id', 'jumlah', 'harga', 'keterangan']);
-            $data['total'] = request('jumlah') * request('harga');
-            $barang_masuk = BarangMasuk::create($data);
-            $barang_masuk->barang->increment('stok', request('jumlah'));
-
-            DB::commit();
-            return redirect()->route('admin.barang-masuk.index')->with('success', 'Barang Masuk berhasil ditambahkan.');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            // throw $th;
-            return redirect()->back()->with('error', $th->getMessage());
+                DB::commit();
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Barang Masuk berhasil ditambahkan!'
+                ]);
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                // throw $th;
+                return response()->json([
+                    'status' => false,
+                    'message' => $th->getMessage()
+                ]);
+            }
         }
     }
 
@@ -122,15 +145,17 @@ class BarangMasukController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy($uuid)
     {
 
         DB::beginTransaction();
         try {
-            $item = BarangMasuk::with('barang')->FindOrFail($id);
+            $item = BarangMasuk::with('details.barang')->where('uuid', $uuid)->firstOrFail();
+            foreach ($item->details as $detail) {
+                // kurangi stok barang
+                $detail->barang->decrement('stok', $detail->jumlah);
+            }
             $item->delete();
-            // kurangi stok barang
-            $item->barang->decrement('stok', $item->jumlah);
             DB::commit();
             return redirect()->route('admin.barang-masuk.index')->with('success', 'Barang Masuk berhasil dihapus.');
         } catch (\Throwable $th) {
@@ -138,5 +163,14 @@ class BarangMasukController extends Controller
             // throw $th;
             return redirect()->back()->with('error', $th->getMessage());
         }
+    }
+
+    public function show($uuid)
+    {
+        $item = BarangMasuk::with('details.barang')->where('uuid', $uuid)->firstOrFail();
+        return view('admin.pages.barang-masuk.show', [
+            'title' => 'Detail Barang Masuk',
+            'item' => $item
+        ]);
     }
 }

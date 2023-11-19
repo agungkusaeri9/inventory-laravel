@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="{{ asset('assets/vendors/mdi/css/materialdesignicons.min.css') }}">
     <script src="{{ asset('assets/js/jquery-3.7.0.min.js') }}"></script>
     @stack('styles')
-    @vite(['resources/js'])
+    @vite(['resources/js/app.js'])
     <style>
         .icon-large {
             font-size: 1.5em;
